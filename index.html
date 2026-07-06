@@ -409,13 +409,29 @@ function shareText(){const arr=curItems().filter(i=>!i.done);const lines=["【"+
   lines.push("— かごメモ");return lines.join("\n");}
 function doShare(){const txt=shareText();if(navigator.share){navigator.share({text:txt}).catch(()=>{});return;}navigator.clipboard?.writeText(txt).then(()=>toast("リストをコピーしました"),()=>alert(txt));}
 
-// receipt (sample only; 実AIは中継設定後)
+// receipt (本物のAI読み取り: Supabase Edge Function 'read-receipt' 経由 + サンプルフォールバック)
 const $rb=()=>document.getElementById("receiptBody");
-function receiptPick(){let h='<div class="rbody"><div class="uploadzone" id="uploadzone"><div class="camicon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="13.5" r="3.3" stroke="currentColor" stroke-width="1.8"/></svg></div><div class="ut">レシートを撮影 / 写真を選ぶ</div><div class="us">※ 本物のAI読み取りは設定後に有効化します</div></div><div class="ordiv">サンプルで試す</div><div class="samples">';
+function receiptPick(){let h='<div class="rbody"><input type="file" id="rfile" accept="image/*" capture="environment" hidden><div class="uploadzone" id="uploadzone"><div class="camicon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="13.5" r="3.3" stroke="currentColor" stroke-width="1.8"/></svg></div><div class="ut">レシートを撮影 / 写真を選ぶ</div><div class="us">AIが店名・合計・品目を自動で読み取ります</div></div><div class="ordiv">またはサンプルで試す</div><div class="samples">';
   RECEIPTS.forEach((r,i)=>{h+=`<div class="samp" data-i="${i}"><span class="ricon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3v18l2-1.4L10 21l2-1.4L14 21l2-1.4L18 21V3l-2 1.4L14 3l-2 1.4L10 3 8 4.4 6 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><div class="rmid"><div class="rstore">${esc(r.store)}</div><div class="rsub">${r.items.length}品 ・ 合計 ${yen(r.total)}</div></div><span class="rgo">›</span></div>`;});
   h+='</div></div>';$rb().innerHTML=h;
-  document.getElementById("uploadzone").addEventListener("click",()=>sampleScan(0));
+  const rfile=document.getElementById("rfile");
+  document.getElementById("uploadzone").addEventListener("click",()=>rfile.click());
+  rfile.addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];rfile.value="";if(f)onFile(f);});
   $rb().querySelectorAll(".samp").forEach(el=>el.addEventListener("click",()=>sampleScan(+el.dataset.i)));}
+function fileToScaled(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(url);let w=img.naturalWidth,h=img.naturalHeight;if(!w||!h){reject(new Error("size"));return;}const max=1568;if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);const d=c.toDataURL("image/jpeg",0.85);resolve(d.split(",")[1]);};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("load"));};img.src=url;});}
+async function onFile(file){let b64;try{b64=await fileToScaled(file);}catch(_){receiptError("画像を読み込めませんでした。別の写真でお試しください。");return;}
+  scanning();
+  try{
+    const {data,error}=await sb.functions.invoke("read-receipt",{body:{image:b64}});
+    if(error)throw error;
+    if(data&&data.error)throw new Error(data.error);
+    const items=((data&&data.items)||[]).map(x=>{const nm=((x&&x.name)||"").toString().trim();return {name:nm,qty:Number(x&&x.qty)||1,unit:((x&&x.unit)||"").toString().trim(),price:Number(x&&x.price)||0,cat:guessCat(nm)};}).filter(x=>x.name);
+    const r={store:((data&&data.store)||"").toString().trim()||"店名不明",total:Number(data&&data.total)||0,items};
+    if(!r.items.length&&!r.total){receiptError("レシートをうまく読み取れませんでした。明るい場所で、レシート全体がまっすぐ大きく写るように撮ると精度が上がります。");return;}
+    renderResult(r);
+  }catch(e){receiptError("読み取りに失敗しました。通信環境をご確認のうえ、もう一度お試しください。");}
+}
+function receiptError(msg){$rb().innerHTML='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px 22px;gap:14px;"><div style="width:52px;height:52px;border-radius:16px;background:#fbeee9;display:flex;align-items:center;justify-content:center;color:#db8574;font-size:28px;font-weight:700;">!</div><p style="font-size:13.5px;color:var(--ink-soft);line-height:1.75;max-width:300px;margin:0;">'+esc(msg)+'</p><button class="ghost" id="eback" style="margin-top:4px;">戻る</button></div>';document.getElementById("eback").addEventListener("click",receiptPick);}
 function scanning(){$rb().innerHTML='<div class="scanwrap"><div class="rcpt"><div class="rl t"></div><div class="rl m"></div><div class="rl s"></div><div class="rl m"></div><div class="rl s"></div><div class="scanline"></div></div><div class="scantxt"><span class="spin"></span>AIがレシートを解析中…</div></div>';}
 function sampleScan(i){scanning();setTimeout(()=>renderResult(RECEIPTS[i]),1200);}
 function renderResult(r){
