@@ -152,8 +152,27 @@ body{font-family:var(--font);color:var(--ink);line-height:1.5;background:radial-
 .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--ink-soft);padding:30px;text-align:center;}
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
 </style>
+<style>
+#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(120% 120% at 50% 22%,#ffffff 0%,#faf1e6 55%,#f3e4d0 100%);transition:opacity .55s ease;}
+#splash.hide{opacity:0;pointer-events:none;}
+#splash .slogo{width:94px;height:94px;border-radius:28px;background:linear-gradient(150deg,#ee8a42,#de6e2a);display:flex;align-items:center;justify-content:center;box-shadow:0 20px 44px -14px rgba(222,110,42,.7);animation:splashPop .8s cubic-bezier(.2,.9,.3,1.3) both;}
+#splash .slogo svg{width:52px;height:52px;}
+#splash .skicker{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:#cf9264;opacity:0;animation:splashRise .6s ease .25s both;}
+#splash .sname{font-size:30px;font-weight:800;letter-spacing:.05em;color:#3a2a20;margin-top:2px;opacity:0;animation:splashRise .6s ease .38s both;}
+#splash .stag{font-size:13px;color:#8a7461;opacity:0;animation:splashRise .6s ease .55s both;}
+@keyframes splashPop{0%{opacity:0;transform:scale(.5) translateY(8px) rotate(-8deg);}60%{transform:scale(1.08) rotate(3deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
+@keyframes splashRise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){#splash .slogo,#splash .skicker,#splash .sname,#splash .stag{animation:none!important;opacity:1;}}
+</style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <div class="slogo"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h16l-1.4 9.2a2 2 0 0 1-2 1.7H7.4a2 2 0 0 1-2-1.7L4 8Z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 8 10 4h4l1.5 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="skicker">kago memo</div>
+  <div class="sname">かごメモ</div>
+  <div class="stag">買い物リストを、みんなで。</div>
+</div>
+<script>(function(){var s=document.getElementById("splash");if(!s)return;var rm=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;setTimeout(function(){s.classList.add("hide");setTimeout(function(){if(s&&s.parentNode)s.parentNode.removeChild(s);},650);},rm?400:1600);})();</script>
 <div class="app" id="app">
   <div class="center"><div class="spin"></div><div>読み込み中…</div></div>
 </div>
