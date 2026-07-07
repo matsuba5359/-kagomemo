@@ -131,6 +131,24 @@ body{font-family:var(--font);color:var(--ink);line-height:1.5;background:radial-
 .login-title{font-size:26px;font-weight:700;margin-top:4px;} .login-sub{font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:8px;}
 .login-input{width:100%;font-family:var(--font);font-size:15px;border:1.5px solid #ede1d3;border-radius:14px;padding:13px 14px;outline:none;background:#fff;} .login-input:focus{border-color:var(--primary);}
 .login-msg{font-size:12.5px;color:var(--ink-soft);background:var(--primary-sf);border-radius:10px;padding:10px 12px;line-height:1.6;}
+/* --- ログイン演出 --- */
+.login{position:relative;overflow:hidden;}
+.login .logo.big{position:relative;animation:logoIn .7s cubic-bezier(.2,.9,.3,1.25) both, logoBob 3.4s ease-in-out 1s infinite;}
+.login .logo.big::after{content:"";position:absolute;inset:-7px;border-radius:24px;background:radial-gradient(closest-side,rgba(222,110,42,.35),transparent);filter:blur(7px);z-index:-1;animation:logoGlow 3.4s ease-in-out 1s infinite;}
+.login-title,.login-sub,.login-input,.login .addall{animation:riseIn .6s ease both;}
+.login-title{animation-delay:.15s;} .login-sub{animation-delay:.28s;} .login-input{animation-delay:.4s;} .login .addall{animation-delay:.52s;}
+.login .addall{transition:transform .15s ease, box-shadow .15s ease;} .login .addall:hover{transform:translateY(-1px);} .login .addall:active{transform:translateY(1px) scale(.99);}
+.login-input{transition:border-color .2s ease, box-shadow .25s ease;} .login-input:focus{box-shadow:0 0 0 4px var(--primary-sf);}
+.login-msg{animation:riseIn .4s ease both;}
+.floaties{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.login>.floaties{z-index:0;} .login>*:not(.floaties){position:relative;z-index:1;}
+.floaties span{position:absolute;bottom:-44px;font-size:26px;opacity:0;will-change:transform,opacity;animation:floatUp linear infinite;filter:drop-shadow(0 4px 6px rgba(0,0,0,.06));}
+@keyframes logoIn{0%{opacity:0;transform:translateY(10px) scale(.6) rotate(-12deg);}60%{transform:translateY(0) scale(1.08) rotate(3deg);}100%{opacity:1;transform:translateY(0) scale(1) rotate(0);}}
+@keyframes logoBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+@keyframes logoGlow{0%,100%{opacity:.45;transform:scale(1);}50%{opacity:.85;transform:scale(1.1);}}
+@keyframes riseIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) rotate(0);}12%{opacity:.7;}88%{opacity:.5;}100%{opacity:0;transform:translateY(-116vh) rotate(40deg);}}
+@media (prefers-reduced-motion:reduce){.login .logo.big,.login .logo.big::after,.login-title,.login-sub,.login-input,.login .addall,.login-msg,.floaties span{animation:none!important;}.floaties{display:none;}}
 .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--ink-soft);padding:30px;text-align:center;}
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
 </style>
@@ -182,6 +200,7 @@ async function boot(){
 function renderLogin(){
   app.innerHTML=`<div class="acctbar"><span></span></div>
   <div class="login">
+    <div class="floaties" aria-hidden="true"><span style="left:8%;animation-duration:9s">🍅</span><span style="left:22%;animation-duration:11s;animation-delay:1.5s;font-size:22px">🥕</span><span style="left:40%;animation-duration:8s;animation-delay:3s">🥛</span><span style="left:57%;animation-duration:12.5s;animation-delay:.8s;font-size:30px">🍞</span><span style="left:72%;animation-duration:10s;animation-delay:2.2s">🧅</span><span style="left:87%;animation-duration:9.5s;animation-delay:4s;font-size:22px">🍎</span><span style="left:15%;animation-duration:13s;animation-delay:5s;font-size:20px">🧀</span><span style="left:66%;animation-duration:14s;animation-delay:6s;font-size:24px">🥚</span></div>
     <span class="logo big"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h16l-1.4 9.2a2 2 0 0 1-2 1.7H7.4a2 2 0 0 1-2-1.7L4 8Z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 8 10 4h4l1.5 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     <h1 class="login-title">かごメモ</h1>
     <p class="login-sub">メールでログインすると、スタッフと<br>買い物リストをリアルタイムに共有できます。</p>
@@ -462,5 +481,6 @@ function renderHistory(){
 
 boot();
 </script>
+<!-- kagomemo build: login-animation v2 -->
 </body>
 </html>
